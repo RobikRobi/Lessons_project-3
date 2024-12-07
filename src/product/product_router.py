@@ -27,12 +27,10 @@ def create_product(product_create: ProductCreate, session: Session = Depends(get
 def list_products(request: Request, session: Session = Depends(get_session)):
     products = session.scalars(select(Products))
     products = products.all()
-    product_id = products.id
     context = {
         "request": request,
         "titel": "Продукты",
-        "products": products,
-        "id": product_id
+        "products": products
     }
     return templates.TemplateResponse("index.html", context=context)
     
