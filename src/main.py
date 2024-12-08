@@ -11,7 +11,7 @@ app.include_router(product_router)
 app.include_router(db_router)
 
 templates = Jinja2Templates(directory="src/templates")
-# app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="src/static"), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
