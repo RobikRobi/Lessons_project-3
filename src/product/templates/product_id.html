@@ -1,7 +1,10 @@
 {% extends "base.html" %}
-{% block titel %}{% endblock %}
+{% block titel %}{{titel}}{% endblock %}
 {% block content %}
-            <h2>Наименование товара: {{name}}</h2>
-            <h3>Цена: {{price}} рублей</h3>
-            <h3>Описание: {{description}}</h3>
+            <h3>Наименование товара: {{name}}</h3>
+            <h4>Цена: {{price}} рублей</h4>
+            <h4>Описание: {{description}}</h4>
+            <p></p>
+            <p></p>
+            <button type="submit"><a href="/delete-product/{{id}}">Удалить продукт</a></button>
 {% endblock %}

@@ -31,14 +31,72 @@ def list_products(request: Request, session: Session = Depends(get_session)):
     products = products.all()
     context = {
         "request": request,
-        "titel": "Продукты",
+        "titel": "Товары нашей компании",
         "products": products
     }
     return templates.TemplateResponse("index.html", context=context)
     
 
+@app.get("/product-add", response_class=HTMLResponse)
+def add_product(request: Request):
+    context = {
+    "request": request,
+    "titel": "Добавление продукта"
+    }
+    return templates.TemplateResponse("productadd.html", context=context)
 
-@app.get("/{id}", response_model=ProductPydantic, response_class=HTMLResponse)
+@app.post("/product-add", response_class=HTMLResponse)
+async def add_product(request: Request, session: Session = Depends(get_session)):
+    form = await request.form()
+    form_data = form._dict
+    print(form_data)
+    product = Products(**form_data)
+    session.add(product)
+    session.commit()
+    context = {
+        "request": request,
+        "titel": "Добавление продукта"
+    }
+    return templates.TemplateResponse("productadd.html", context=context)
+
+@app.get("/", response_model=ProductPydantic, response_class=HTMLResponse)
+def list_products(request: Request, session: Session = Depends(get_session)):
+    products = session.scalars(select(Products))
+    products = products.all()
+    context = {
+        "request": request,
+        "titel": "Товары нашей компании",
+        "products": products
+    }
+    return templates.TemplateResponse("index.html", context=context)
+    
+@app.post("/delete-product/{id}")
+async def delete_product_post(id: int, request: Request, session: Session = Depends(get_session)):
+    product = session.scalar(select(Products).filter(Products.id == id))
+    session.delete(product)
+    session.commit()
+    context = {
+        "request": request,
+        "titel": "Удаление продукта"
+    }
+    return templates.TemplateResponse("productdel.html", context=context)
+
+@app.get("/delete-product/{id}", response_class=HTMLResponse)
+async def delete_product_get(id: int, request: Request, session: Session = Depends(get_session)):
+    product = session.scalar(select(Products).filter(Products.id == id))
+    name = product.name
+    price = product.price
+    description = product.description
+    context = {
+        "request": request,
+        "titel": "Удаление продукта",
+        "name": name,
+        "price": price,
+        "description": description
+    }
+    return templates.TemplateResponse("productdel.html", context=context)
+
+@app.get("/product-add/{id}", response_model=ProductPydantic, response_class=HTMLResponse)
 def get_balance(request: Request, id: int, session: Session = Depends(get_session)):
     product= session.scalar(select(Products).filter(Products.id == id))
     name = product.name
@@ -46,24 +104,10 @@ def get_balance(request: Request, id: int, session: Session = Depends(get_sessio
     description = product.description
     context = {
         "request": request,
-        "titel": "Продукты",
+        "titel": "Каталог товаров",
+        "id": id,
         "name": name,
         "price": price,
         "description": description
     }
     return templates.TemplateResponse("product_id.html", context=context)
-
-@app.get("/creat/", response_class=HTMLResponse)
-
-@app.post("/creat/", response_class=HTMLResponse)
-async def add_product(request: Request, session: Session = Depends(get_session)):
-    form = await request.form()
-    form_data = form._dict
-    product = Products(**form_data)
-    session.add(product)
-    session.commit()
-    context = {
-        "request": request,
-        "titel": "Form"
-    }
-    return templates.TemplateResponse("creat.html", context=context)

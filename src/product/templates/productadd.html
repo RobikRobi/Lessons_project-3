@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block titel %}{{titel}}{% endblock %}
+{% block content %}
+    <p></p>
+    <form method="post">
+        <p>Название продукта: <input type="text" name="name" id="name" /></p>
+        <p>Цена: <input type="number" name="price" id="price" /></p>
+        <p>Описание: <input type="text" name="description" id="description" /></p>
+
+        <p><input type="submit" value="Добавить"></p>
+    </form>
+{% endblock %}

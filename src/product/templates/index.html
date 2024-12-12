@@ -3,8 +3,9 @@
 {% block content %}
     <ul>
         {% for product in products %}
-        <li><a href="/products/{{product.id}}">{{product.name}}</a></li>
+        <li><a href="/products/product-add/{{product.id}}">{{product.name}}</a></li>
         {% endfor %}
     </ul>
-    <h3><a href="/creat">Добавить продукт в базу данных</a></h3>
+    <p></p>
+    <h4><a href="/products/product-add">Добавить продукт</a></h4>
 {% endblock %}
