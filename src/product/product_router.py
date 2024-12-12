@@ -70,7 +70,7 @@ def list_products(request: Request, session: Session = Depends(get_session)):
     }
     return templates.TemplateResponse("index.html", context=context)
     
-@app.post("/delete-product/{id}")
+@app.post("/delete-product/{id}", response_class=HTMLResponse)
 async def delete_product_post(id: int, request: Request, session: Session = Depends(get_session)):
     product = session.scalar(select(Products).filter(Products.id == id))
     session.delete(product)
@@ -82,7 +82,7 @@ async def delete_product_post(id: int, request: Request, session: Session = Depe
     return templates.TemplateResponse("productdel.html", context=context)
 
 @app.get("/delete-product/{id}", response_class=HTMLResponse)
-async def delete_product_get(id: int, request: Request, session: Session = Depends(get_session)):
+def delete_product_get(id: int, request: Request, session: Session = Depends(get_session)):
     product = session.scalar(select(Products).filter(Products.id == id))
     name = product.name
     price = product.price
