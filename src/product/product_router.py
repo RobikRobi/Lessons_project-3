@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -26,70 +27,91 @@ templates = Jinja2Templates(directory="src/product/templates")
 
 
 @app.get("/", response_model=ProductPydantic, response_class=HTMLResponse)
-def list_products(request: Request, session: Session = Depends(get_session)):
-    products = session.scalars(select(Products))
+async def list_products(request: Request, session: AsyncSession = Depends(get_session)):
+    products = await session.scalars(select(Products))
     products = products.all()
     context = {
         "request": request,
-        "titel": "Товары нашей компании",
+        "title": "Товары нашей компании",
         "products": products
     }
     return templates.TemplateResponse("index.html", context=context)
     
 
 @app.get("/product-add", response_class=HTMLResponse)
-def add_product(request: Request):
+async def add_product(request: Request):
     context = {
     "request": request,
-    "titel": "Добавление продукта"
+    "title": "Добавление продукта"
     }
     return templates.TemplateResponse("productadd.html", context=context)
 
 @app.post("/product-add", response_class=HTMLResponse)
-async def add_product(request: Request, session: Session = Depends(get_session)):
+async def add_product(request: Request, session: AsyncSession = Depends(get_session)):
     form = await request.form()
     form_data = form._dict
-    print(form_data)
-    product = Products(**form_data)
-    session.add(product)
-    session.commit()
-    context = {
-        "request": request,
-        "titel": "Добавление продукта"
-    }
-    return templates.TemplateResponse("productadd.html", context=context)
+    price = int(form_data["price"])
+    product = Products(name=form_data["name"], price=price, description=form_data["description"])
+    
+    try:
+        session.add(product)
+        await session.commit()
+        context = {
+            "request": request,
+            "title": "Продукт успешно добавлен",
+            "message": "Продукт был успешно добавлен."
+        }
+        return templates.TemplateResponse("productadd.html", context=context)
+    except Exception as e:
+        print(f"Error saving product to the database: {e}")
+        context = {
+            "request": request,
+            "title": "Ошибка при добавлении продукта",
+            "error_message": "Произошла ошибка при добавлении продукта. Попробуйте снова позже."
+        }
+        return templates.TemplateResponse("productadd.html", context=context)
+    # form = await request.form()
+    # form_data = form._dict
+    # product = Products(**form_data)
+    # session.add(product)
+    # await session.commit()
+    # context = {
+    #     "request": request,
+    #     "title": "Добавление продукта"
+    # }
+    # return templates.TemplateResponse("productadd.html", context=context)
 
 @app.get("/", response_model=ProductPydantic, response_class=HTMLResponse)
-def list_products(request: Request, session: Session = Depends(get_session)):
-    products = session.scalars(select(Products))
+async def list_products(request: Request, session: AsyncSession = Depends(get_session)):
+    products = await session.scalars(select(Products))
     products = products.all()
     context = {
         "request": request,
-        "titel": "Товары нашей компании",
+        "title": "Товары нашей компании",
         "products": products
     }
     return templates.TemplateResponse("index.html", context=context)
     
 @app.post("/delete-product/{id}", response_class=HTMLResponse)
-async def delete_product_post(id: int, request: Request, session: Session = Depends(get_session)):
-    product = session.scalar(select(Products).filter(Products.id == id))
+async def delete_product_post(id: int, request: Request, session: AsyncSession = Depends(get_session)):
+    product = await session.scalar(select(Products).filter(Products.id == id))
     session.delete(product)
-    session.commit()
+    await session.commit()
     context = {
         "request": request,
-        "titel": "Удаление продукта"
+        "title": "Удаление продукта"
     }
     return templates.TemplateResponse("productdel.html", context=context)
 
 @app.get("/delete-product/{id}", response_class=HTMLResponse)
-def delete_product_get(id: int, request: Request, session: Session = Depends(get_session)):
-    product = session.scalar(select(Products).filter(Products.id == id))
+async def delete_product_get(id: int, request: Request, session: AsyncSession = Depends(get_session)):
+    product = await session.scalar(select(Products).filter(Products.id == id))
     name = product.name
     price = product.price
     description = product.description
     context = {
         "request": request,
-        "titel": "Удаление продукта",
+        "title": "Удаление продукта",
         "name": name,
         "price": price,
         "description": description
@@ -97,14 +119,14 @@ def delete_product_get(id: int, request: Request, session: Session = Depends(get
     return templates.TemplateResponse("productdel.html", context=context)
 
 @app.get("/product-add/{id}", response_model=ProductPydantic, response_class=HTMLResponse)
-def get_balance(request: Request, id: int, session: Session = Depends(get_session)):
-    product= session.scalar(select(Products).filter(Products.id == id))
+async def get_balance(request: Request, id: int, session: AsyncSession = Depends(get_session)):
+    product= await session.scalar(select(Products).filter(Products.id == id))
     name = product.name
     price = product.price
     description = product.description
     context = {
         "request": request,
-        "titel": "Каталог товаров",
+        "title": "Каталог товаров",
         "id": id,
         "name": name,
         "price": price,
